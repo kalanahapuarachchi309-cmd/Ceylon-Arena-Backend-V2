@@ -79,10 +79,18 @@ export const registerWithBankPayment = async (req: Request, res: Response) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // 3️⃣ Upload slip to Cloudinary
-    const uploadResult = await cloudinary.uploader.upload(req.file.path, {
-      folder: "payment_slips",
-      use_filename: true,
-      unique_filename: false
+    const uploadResult = await new Promise<any>((resolve, reject) => {
+      const stream = cloudinary.uploader.upload_stream(
+        {
+          folder: "payment_slips"
+        },
+        (error, result) => {
+          if (error) reject(error);
+          else resolve(result);
+        }
+      );
+    
+      stream.end(req.file!.buffer);
     });
 
     // 4️⃣ Create user (inside transaction)
