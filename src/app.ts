@@ -8,7 +8,7 @@ const app = express();
 
 app.use(
   cors({
-    origin: ["http://localhost:5173", "https://ceylon-arena-gamming-web-site.vercel.app"],
+    origin: ["http://localhost:5173", "https://www.ceylonarena.com"],
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH"]
   })
 );
