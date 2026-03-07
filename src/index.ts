@@ -16,7 +16,9 @@ app.use(express.json())
 app.use(
   cors({
     origin: ["http://localhost:5173", "https://www.ceylonarena.com"],
-    methods: ["GET", "POST", "PUT", "DELETE", "PATCH"]
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
+    credentials: true,
+    allowedHeaders: ["Content-Type", "Authorization"]
   })
 );
 
