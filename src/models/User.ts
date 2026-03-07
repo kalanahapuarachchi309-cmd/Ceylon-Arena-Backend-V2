@@ -4,6 +4,12 @@ export enum Role {
   USER = "USER", ADMIN = "ADMIN"
 }
 
+export enum UserAccountStatus {
+  PENDING = "PENDING",
+  COMPLETED = "COMPLETED",
+  FAILED = "FAILED"
+}
+
 export interface IGame {
   game: string;
   gameId: string;
@@ -26,6 +32,7 @@ export interface IUser extends Document {
   address: string;
   password: string;
   status: boolean;
+  accountStatus: UserAccountStatus;
   games: IGame[];
   refreshToken: string;
 }
@@ -55,6 +62,11 @@ const UserSchema = new Schema<IUser>(
     address: { type: String, required: true },
     password: { type: String, required: true },
     status: { type: Boolean, default: false },
+    accountStatus: {
+      type: String,
+      enum: Object.values(UserAccountStatus),
+      default: UserAccountStatus.PENDING
+    },
     games: [GameSchema],
     refreshToken: { type: String }
   },

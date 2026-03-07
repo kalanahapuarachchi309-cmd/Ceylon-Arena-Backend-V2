@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import PaymentModel, { PaymentStatus } from '../models/Payment';
+import User from "../models/User";
 
 export const getPayments = async (req: Request, res: Response) => {
     try {
@@ -49,6 +50,13 @@ export const changePaymentStatus = async (req: Request, res: Response) => {
 
     payment.status = status;
     await payment.save();
+
+    // Keep user account status aligned with payment status.
+    // COMPLETED => active user account, FAILED/PENDING => inactive.
+    await User.findByIdAndUpdate(payment.userId, {
+      accountStatus: status,
+      status: status === PaymentStatus.COMPLETED,
+    });
 
     res.json({
       success: true,

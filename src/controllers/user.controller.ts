@@ -1,7 +1,7 @@
 import jwt, { JwtPayload } from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import { Request, Response } from "express";
-import User from "../models/User";
+import User, { UserAccountStatus } from "../models/User";
 import mongoose from "mongoose";
 import cloudinary from "../config/cloudinary";
 import Payment, { PaymentMethod, PaymentStatus } from "../models/Payment";
@@ -26,10 +26,11 @@ export const register = async (req: Request, res: Response) => {
       promoCode,
       address: leaderAddress,
       password: hashedPassword,
+      accountStatus: UserAccountStatus.PENDING,
       games: [{ game, gameId, teamName, player2Name, player2GameId, player3Name, player3GameId, player4Name, player4GameId }]
     });
 
-    res.status(201).json({ message: "User registered successfully", data: { id: user._id, playerName: user.playerName, email: user.email, role: user.role } });
+    res.status(201).json({ message: "User registered successfully", data: { id: user._id, playerName: user.playerName, email: user.email, role: user.role, accountStatus: user.accountStatus } });
   } catch (err) {
     res.status(500).json({ message: "Server error" });
   }
@@ -101,6 +102,7 @@ export const registerWithBankPayment = async (req: Request, res: Response) => {
       promoCode,
       address: leaderAddress,
       password: hashedPassword,
+      accountStatus: UserAccountStatus.PENDING,
       games: [{
         game,
         gameId,
@@ -176,7 +178,8 @@ export const login = async (req: Request, res: Response) => {
         id: user._id,
         playerName: user.playerName,
         email: user.email,
-        role: user.role
+        role: user.role,
+        accountStatus: user.accountStatus
       }
     });
   } catch (err) {
