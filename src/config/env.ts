@@ -17,10 +17,19 @@ const envSchema = z.object({
   JWT_REFRESH_SECRET: z.string().min(16, "JWT_REFRESH_SECRET is too short"),
   JWT_ACCESS_EXPIRES: z.string().min(1).default("15m"),
   JWT_REFRESH_EXPIRES: z.string().min(1).default("7d"),
-  COOKIE_DOMAIN: z.string().optional(),
+  COOKIE_DOMAIN: z.string().optional().refine(
+    (val) => !val || (!val.startsWith("http") && !val.endsWith("/")),
+    { message: "COOKIE_DOMAIN must be a hostname only (no protocol or trailing slash)" }
+  ),
   COOKIE_SECURE: z.string().default("false"),
-  CLIENT_URL: z.string().default("http://localhost:5173"),
-  CORS_ORIGINS: z.string().default("http://localhost:5173"),
+  CLIENT_URL: z.string().default("http://localhost:5173").refine(
+    (val) => !val.endsWith("/"),
+    { message: "CLIENT_URL must not have trailing slash" }
+  ),
+  CORS_ORIGINS: z.string().default("http://localhost:5173").refine(
+    (val) => !val.split(",").some(origin => origin.trim().endsWith("/")),
+    { message: "CORS_ORIGINS must not have trailing slashes" }
+  ),
   CLOUDINARY_CLOUD_NAME: z.string().min(1, "CLOUDINARY_CLOUD_NAME is required"),
   CLOUDINARY_API_KEY: z.string().min(1, "CLOUDINARY_API_KEY is required"),
   CLOUDINARY_API_SECRET: z.string().min(1, "CLOUDINARY_API_SECRET is required"),
