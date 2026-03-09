@@ -1,7 +1,11 @@
 import dotenv from "dotenv";
 import { z } from "zod";
 
-dotenv.config();
+// Only load .env file in local development
+// In Vercel, environment variables are injected via dashboard
+if (process.env.NODE_ENV !== "production") {
+  dotenv.config();
+}
 
 const envSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),

@@ -1,0 +1,12 @@
+node_modules
+.env
+.env.local
+.env.development
+.env.test
+dist
+.git
+.gitignore
+*.log
+.DS_Store
+README.md
+tsconfig.json

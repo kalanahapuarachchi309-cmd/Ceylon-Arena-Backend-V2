@@ -75,7 +75,6 @@ const teamSchema = new Schema<ITeam>(
   }
 );
 
-teamSchema.index({ leaderId: 1 }, { unique: true });
-teamSchema.index({ teamNameNormalized: 1 }, { unique: true });
+// No additional indexes needed - unique constraints are defined in schema
 
 export const TeamModel = model<ITeam>("Team", teamSchema);

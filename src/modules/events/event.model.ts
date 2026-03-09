@@ -120,7 +120,7 @@ const eventSchema = new Schema<IEvent>(
   }
 );
 
-eventSchema.index({ slug: 1 }, { unique: true });
+// Compound indexes for queries
 eventSchema.index({ status: 1, registrationCloseAt: 1 });
 eventSchema.index({ isDeleted: 1, gameName: 1 });
 

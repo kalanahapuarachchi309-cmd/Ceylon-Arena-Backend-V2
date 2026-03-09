@@ -74,7 +74,7 @@ const userSchema = new Schema<IUser>(
   }
 );
 
-userSchema.index({ email: 1 }, { unique: true });
+// Compound index for role-based queries
 userSchema.index({ role: 1, isActive: 1 });
 
 export const UserModel = model<IUser>("User", userSchema);
