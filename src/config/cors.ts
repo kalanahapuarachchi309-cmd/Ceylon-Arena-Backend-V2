@@ -2,6 +2,10 @@ import type { CorsOptions } from "cors";
 import { env } from "./env";
 import { logger } from "../utils/logger";
 
+const allowedOrigins = new Set(env.CORS_ORIGINS);
+
+export const isOriginAllowed = (origin: string): boolean => allowedOrigins.has(origin);
+
 export const corsOptions: CorsOptions = {
   origin: (origin, callback) => {
     // Allow requests with no origin (mobile apps, Postman, etc.)
@@ -11,16 +15,15 @@ export const corsOptions: CorsOptions = {
     }
 
     // Check if origin is in allowed list
-    if (env.CORS_ORIGINS.includes(origin)) {
+    if (isOriginAllowed(origin)) {
       callback(null, true);
       return;
     }
 
     // Log rejected origins for debugging
-    logger.warn(`CORS rejected origin: ${origin}. Allowed origins:`, env.CORS_ORIGINS);
+    logger.warn(`CORS rejected origin: ${origin}. Allowed origins:`, Array.from(allowedOrigins));
     
-    // CRITICAL: Do NOT throw Error - use callback(null, false) to reject
-    // Throwing Error crashes serverless functions
+    // Reject without throwing to avoid crashing serverless handlers.
     callback(null, false);
   },
   credentials: true,
@@ -28,5 +31,6 @@ export const corsOptions: CorsOptions = {
   allowedHeaders: ["Content-Type", "Authorization", "Cookie"],
   exposedHeaders: ["Set-Cookie"],
   preflightContinue: false,
-  optionsSuccessStatus: 204
+  optionsSuccessStatus: 204,
+  maxAge: 86400
 };

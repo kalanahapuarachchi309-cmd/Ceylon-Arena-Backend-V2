@@ -56,11 +56,15 @@ const expiresToMilliseconds = (value: string): number | undefined => {
   return amount * multipliers[unit];
 };
 
+const sameSite: CookieOptions["sameSite"] = env.COOKIE_SECURE ? "none" : "lax";
+const cookieDomain =
+  env.COOKIE_DOMAIN && env.COOKIE_DOMAIN !== "localhost" ? env.COOKIE_DOMAIN : undefined;
+
 const baseCookieOptions: CookieOptions = {
   httpOnly: true,
   secure: env.COOKIE_SECURE,
-  sameSite: env.COOKIE_SECURE ? "none" : "lax",
-  domain: env.COOKIE_DOMAIN || undefined,
+  sameSite,
+  domain: cookieDomain,
   path: "/"
 };
 

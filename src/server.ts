@@ -1,4 +1,4 @@
-import { app } from "./app";
+import app from "./app";
 import { connectDatabase } from "./config/db";
 import { env } from "./config/env";
 import { seedAdmin } from "./scripts/seedAdmin";
@@ -7,7 +7,10 @@ import { logger } from "./utils/logger";
 const startServer = async (): Promise<void> => {
   try {
     await connectDatabase();
-    await seedAdmin();
+
+    if (env.NODE_ENV !== "production") {
+      await seedAdmin();
+    }
 
     app.listen(env.PORT, () => {
       logger.info(`${env.APP_NAME} listening on port ${env.PORT}`);

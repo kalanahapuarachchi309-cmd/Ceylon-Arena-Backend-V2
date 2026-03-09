@@ -1,35 +1,90 @@
-import mongoose from "mongoose";
+import mongoose, { type Mongoose } from "mongoose";
 import { env } from "./env";
 import { logger } from "../utils/logger";
 
-// Cache the MongoDB connection for serverless environments
-// This prevents creating new connections on every function invocation
-let cachedConnection: typeof mongoose | null = null;
+interface MongooseConnectionCache {
+  conn: Mongoose | null;
+  promise: Promise<Mongoose> | null;
+  listenersAttached: boolean;
+}
 
-export const connectDatabase = async (): Promise<typeof mongoose> => {
-  // If we have a cached connection and it's ready, return it
-  if (cachedConnection && mongoose.connection.readyState === 1) {
-    logger.info("Using cached MongoDB connection");
-    return cachedConnection;
+const globalWithMongooseCache = globalThis as typeof globalThis & {
+  __mongooseConnectionCache?: MongooseConnectionCache;
+};
+
+const mongooseConnectionCache =
+  globalWithMongooseCache.__mongooseConnectionCache ??
+  (globalWithMongooseCache.__mongooseConnectionCache = {
+    conn: null,
+    promise: null,
+    listenersAttached: false
+  });
+
+const attachConnectionListeners = (): void => {
+  if (mongooseConnectionCache.listenersAttached) {
+    return;
   }
 
-  // Otherwise, create a new connection
-  try {
-    // Set mongoose options for better serverless compatibility
-    mongoose.set('strictQuery', false);
-    
-    // Configure connection options for serverless
-    const connection = await mongoose.connect(env.MONGO_URI, {
-      maxPoolSize: 10,
-      serverSelectionTimeoutMS: 5000,
-      socketTimeoutMS: 45000,
+  mongoose.connection.on("error", (error: Error) => {
+    logger.error("MongoDB runtime error", {
+      name: error.name,
+      message: error.message
     });
+  });
 
-    cachedConnection = connection;
-    logger.info("MongoDB connected successfully");
-    return connection;
+  mongoose.connection.on("disconnected", () => {
+    logger.warn("MongoDB disconnected");
+  });
+
+  mongooseConnectionCache.listenersAttached = true;
+};
+
+export const connectDatabase = async (): Promise<Mongoose> => {
+  if (mongoose.connection.readyState === 1) {
+    mongooseConnectionCache.conn = mongoose;
+    return mongoose;
+  }
+
+  if (mongooseConnectionCache.promise) {
+    return mongooseConnectionCache.promise;
+  }
+
+  try {
+    attachConnectionListeners();
+    mongoose.set("strictQuery", false);
+    mongoose.set("bufferCommands", false);
+
+    mongooseConnectionCache.promise = mongoose
+      .connect(env.MONGO_URI, {
+        maxPoolSize: 10,
+        minPoolSize: 1,
+        serverSelectionTimeoutMS: 10000,
+        socketTimeoutMS: 45000
+      })
+      .then((connection) => {
+        mongooseConnectionCache.conn = connection;
+        mongooseConnectionCache.promise = null;
+        logger.info("MongoDB connected successfully");
+        return connection;
+      })
+      .catch((error: unknown) => {
+        mongooseConnectionCache.promise = null;
+
+        if (error instanceof Error) {
+          logger.error("MongoDB connection error", {
+            name: error.name,
+            message: error.message
+          });
+        } else {
+          logger.error("MongoDB connection error", error);
+        }
+
+        throw new Error("Failed to connect to MongoDB. Check MONGO_URI and network access.");
+      });
+
+    return mongooseConnectionCache.promise;
   } catch (error) {
-    logger.error("MongoDB connection error:", error);
-    throw new Error(`Failed to connect to MongoDB: ${error instanceof Error ? error.message : "Unknown error"}`);
+    mongooseConnectionCache.promise = null;
+    throw error;
   }
 };

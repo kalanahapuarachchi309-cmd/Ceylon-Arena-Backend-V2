@@ -2,13 +2,14 @@
   "name": "gaming-event-backend",
   "version": "1.0.0",
   "description": "Ceylon Arena backend API",
-  "main": "dist/app.js",
+  "main": "dist/server.js",
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
-    "build": "tsc",
+    "clean": "node -e \"require('fs').rmSync('dist', { recursive: true, force: true })\"",
+    "build": "npm run clean && tsc -p tsconfig.json",
     "start": "node dist/server.js",
-    "typecheck": "tsc --noEmit",
-    "vercel-build": "tsc"
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "vercel-build": "npm run build"
   },
   "keywords": [],
   "author": "",
