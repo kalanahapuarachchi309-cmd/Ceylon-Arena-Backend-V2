@@ -109,6 +109,18 @@ export const authService = {
 
       await session.commitTransaction();
 
+      const tokenPayload = toAuthPayload({
+        _id: createdUser._id,
+        role: createdUser.role,
+        email: createdUser.email
+      });
+
+      const accessToken = signAccessToken(tokenPayload);
+      const refreshToken = signRefreshToken(tokenPayload);
+      createdUser.refreshTokenHash = hashToken(refreshToken);
+      createdUser.lastLoginAt = new Date();
+      await createdUser.save();
+
       return {
         user: sanitizeUser(createdUser.toObject()),
         team: {
@@ -121,7 +133,9 @@ export const authService = {
           isActive: createdTeam.isActive,
           createdAt: createdTeam.createdAt,
           updatedAt: createdTeam.updatedAt
-        }
+        },
+        accessToken,
+        refreshToken
       };
     } catch (error) {
       await session.abortTransaction();

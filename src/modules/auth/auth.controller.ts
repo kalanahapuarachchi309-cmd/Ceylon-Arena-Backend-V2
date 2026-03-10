@@ -31,12 +31,17 @@ const getRefreshTokenFromRequest = (req: Request): string | undefined => {
 
 export const register = asyncHandler(async (req: Request, res: Response) => {
   const result = await authService.registerLeaderWithTeam(req.body);
+  setAuthCookies(res, result.accessToken, result.refreshToken);
 
   return sendSuccess(
     res,
     StatusCodes.CREATED,
     "Team leader registered successfully",
-    result
+    {
+      user: result.user,
+      team: result.team,
+      accessToken: result.accessToken
+    }
   );
 });
 
