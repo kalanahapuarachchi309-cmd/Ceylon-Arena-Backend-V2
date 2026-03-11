@@ -256,7 +256,7 @@ export const paymentService = {
         .populate({ path: "registrationId", select: "_id status teamId" })
         .populate({ path: "eventId", select: "_id title slug gameName status" })
         .populate({ path: "teamId", select: "_id teamName" })
-        .populate({ path: "leaderId", select: "_id fullName email promoCode" })
+        .populate({ path: "leaderId", select: "_id fullName email phone promoCode" })
         .populate({ path: "reviewedBy", select: "_id fullName email" })
         .sort({ createdAt: -1 })
         .skip(skip)
